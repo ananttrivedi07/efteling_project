@@ -4,6 +4,8 @@ from models.training_testing import *
 import yaml
 import os
 import torch
+from torchvision.models import resnet18, ResNet18_Weights
+
 CONFIG_file = "config.yaml"
 
 def load_config(config_file):
@@ -16,7 +18,8 @@ def load_config(config_file):
 
 
 def load_model(model_path, device, num_classes):
-    model = ResNet18(num_classes=num_classes)
+    model = resnet18(num_classes=num_classes)
+    
     
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     model.to(device)
@@ -41,9 +44,12 @@ def run_pipeline(config_file=None):
         # Device configuration
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Using device: {device}")
-        num_classes, num_epochs, batch_size = 6, 50, 32
-        model = ResNet18(num_classes=num_classes).to(device)
+        num_classes, num_epochs, batch_size = 6, 80, 32
+        model = resnet18(weights=ResNet18_Weights.DEFAULT)
+        model.fc = nn.Linear(model.fc.in_features, 6) # Adjust the final layer for your 6 classesx
+        model.to(device)
         train_model(model, device, logger, epochs=num_epochs, train_loader=train_loader, val_loader=val_loader, idx_to_label=idx_to_label)
+        print("Model training completed!")
     
     if config['flags']['only_test_model']:
         print("Testing the model...")
