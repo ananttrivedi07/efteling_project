@@ -1,4 +1,5 @@
 from data_processing.functions import *
+from feature_processing.functions import *
 import yaml
 import os
 CONFIG_file = "config.yaml"
@@ -19,6 +20,8 @@ def run_pipeline(config_file=None):
         run_data_processing(root_folder="data", create_plots=True)
     
     # 2. feature extraction
+    if config['flags']['generate_features']:
+        run_feature_processing(root_folder="data", show_training_data=config['flags']['show_training_data'], create_plots=config['flags']['create_plots'])
     
     # 3. run model
     

@@ -1,4 +1,4 @@
 flags:
-  processing_files: True
-  generate_features: False
+  processing_files: False
+  generate_features: True
   train_model: False
