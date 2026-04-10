@@ -1,6 +1,4 @@
 import random
-
-from cv2 import transform
 import pandas as pd
 import os
 import pandas as pd
@@ -56,7 +54,7 @@ def visualize_random(dataset, idx_to_label):
 
 
 
-def run_feature_processing(root_folder="data", show_training_data=False, create_plots=False):
+def run_feature_processing(root_folder="data", show_training_data=False, show_raw_data=False):
     print("Running feature processing...")
     base_path = os.path.join(root_folder, "dataset-resized")
     df = load_image_dataset(base_path)
@@ -77,7 +75,11 @@ def run_feature_processing(root_folder="data", show_training_data=False, create_
     # Train-validation split
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42, stratify=y_train)
 
-    transform = None
+    transform = transforms.Compose([
+        transforms.Resize((128, 128)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.5]*3, [0.5]*3)
+    ])
     
     train_ds = ImageDataset(X_train, y_train, transform=transform)
     val_ds = ImageDataset(X_val, y_val, transform=transform)
@@ -93,4 +95,4 @@ def run_feature_processing(root_folder="data", show_training_data=False, create_
         visualize_random(train_ds, idx_to_label)
     
     print("Classes:", label_to_idx)
-    pass
+    return train_loader, val_loader, test_loader, idx_to_label

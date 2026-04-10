@@ -10,7 +10,6 @@ import pytorch_lightning as pl
 import torchvision.transforms as transforms
 import openml_pytorch as opt
 from tqdm import tqdm
-
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 

@@ -47,7 +47,7 @@ def show_random_images_per_class(base_path, num_images=5):
         plt.show()
 
     
-def run_data_processing(root_folder, create_plots=False):   
+def run_data_processing(root_folder, show_raw_data=False):   
     """
     Get data from trashnet dataset, copy to local folder, and optionally create plots of random images per class.
     """ 
@@ -59,5 +59,5 @@ def run_data_processing(root_folder, create_plots=False):
     shutil.copytree(path, target_dir, dirs_exist_ok=True)
 
     print("Dataset copied to:", target_dir)
-    if create_plots:
+    if show_raw_data:
         show_random_images_per_class(target_dir)    
