@@ -6,7 +6,7 @@ from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 from models.model_framework import *
-
+from torchvision import transforms
 
 def load_image_dataset(data_dir):
     data = []
@@ -75,11 +75,11 @@ def run_feature_processing(root_folder="data", show_training_data=False, show_ra
     # Train-validation split
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42, stratify=y_train)
 
-    transform = transforms.Compose([
-        transforms.Resize((128, 128)),
-        transforms.ToTensor(),
-        transforms.Normalize([0.5]*3, [0.5]*3)
-    ])
+    # transform = transforms.Compose([
+    #     transforms.Resize((128, 128)),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize([0.5]*3, [0.5]*3)
+    # ])
     
     # transform = transforms.Compose([
     #     transforms.RandomResizedCrop(224), # EXPERIMENT02
@@ -93,14 +93,31 @@ def run_feature_processing(root_folder="data", show_training_data=False, show_ra
     #     transforms.ToTensor(),
     #     transforms.Normalize(mean=[0.5]*3, std=[0.5]*3),
     # ])
+
+    # FOR TRAINING ONLY
+    train_transform = transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(15),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5]*3, std=[0.5]*3)
+    ])
+
+    # FOR VALIDATION AND TESTING
+    val_test_transform = transforms.Compose([
+        transforms.Resize((224, 224)), # Just resize it to the expected input size
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5]*3, std=[0.5]*3)
+    ])
     
-    train_ds = ImageDataset(X_train, y_train, transform=transform)
-    val_ds = ImageDataset(X_val, y_val, transform=transform)
+    train_ds = ImageDataset(X_train, y_train, transform=train_transform)
+    val_ds = ImageDataset(X_val, y_val, transform=val_test_transform)
     train_loader = DataLoader(train_ds, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=32, shuffle=False)
 
     # Test data loader. Leave this unchanged.
-    test_ds = ImageDataset(X_test, y_test, transform=transform)
+    test_ds = ImageDataset(X_test, y_test, transform=val_test_transform)
     test_loader = DataLoader(test_ds, batch_size=32, shuffle=False)
 
     
