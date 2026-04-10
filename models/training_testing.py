@@ -1,34 +1,33 @@
 # Create logger with model name
 import torch
-import torch.optim as optim
+import torch.nn as nn
 import torchmetrics
-from torchvision import models
-from models.model_framework import *
-from models.RestNet18 import ResNet18
-from torch import nn
+from tqdm import tqdm
+import copy
 
-# Define how to train your model
 def train_model(model, device, logger, epochs=10, train_loader=None, val_loader=None, idx_to_label=None):
-    #Train the model
-    train_loss = []
-    val_loss = []
-    train_acc_list = []
-    train_lost_list = []
-    val_acc_list = []
-    val_lost_list = []
+    model.to(device)
 
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, weight_decay = 0.0001, momentum = 0.9)
+    criterion = nn.CrossEntropyLoss() 
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, weight_decay=1e-4, momentum=0.9)
+    
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
 
     accuracy_metric = torchmetrics.Accuracy(task="multiclass", num_classes=len(idx_to_label)).to(device)
-    for epoch in tqdm(range(epochs), desc="Training Progress", unit="epoch"):
-        model.train()
-        total_loss, correct, total = 0, 0, 0
 
-        for X_batch, y_batch in train_loader:
+    best_val_loss = float('inf')
+    best_model_wts = copy.deepcopy(model.state_dict())
+
+    for epoch in range(epochs):
+        model.train()
+        total_train_loss = 0
+        accuracy_metric.reset()
+
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs} [Train]", unit="batch")
+        for X_batch, y_batch in pbar:
             X_batch, y_batch = X_batch.to(device), y_batch.to(device)
 
-            # Forward pass + loss calculation
+            # Forward pass
             outputs = model(X_batch)
             loss = criterion(outputs, y_batch)
 
@@ -37,80 +36,70 @@ def train_model(model, device, logger, epochs=10, train_loader=None, val_loader=
             loss.backward()
             optimizer.step()
 
-            # Compute training metrics
-            total_loss += loss.item()
-            accuracy_metric.reset()
-            correct += accuracy_metric(outputs, y_batch).item() * y_batch.size(0)
+            # Update metrics
+            total_train_loss += loss.item()
+            accuracy_metric.update(outputs, y_batch)
 
-            total += y_batch.size(0)
+        train_loss = total_train_loss / len(train_loader)
+        train_acc = accuracy_metric.compute().item()
 
-        # Compute epoch training metrics
-        train_loss = total_loss / len(train_loader)
-        train_acc = correct / total
-        train_acc_list.append(train_acc)
-        train_lost_list.append(train_loss)
-        print(f'This is the training loss: {train_loss}, for epoch: {epoch}')
-        print(f'This is train accuracy: {train_acc}, for epoch: {epoch}')
-
-        # Validation phase
         model.eval()
-        val_loss, val_correct, val_total = 0, 0, 0
+        total_val_loss = 0
+        accuracy_metric.reset()
 
         with torch.no_grad():
             for X_val, y_val in val_loader:
                 X_val, y_val = X_val.to(device), y_val.to(device)
                 val_outputs = model(X_val)
                 loss = criterion(val_outputs, y_val)
+                total_val_loss += loss.item()
+                accuracy_metric.update(val_outputs, y_val)
 
-                val_loss += loss.item()
-                accuracy_metric.reset()
-                val_correct += accuracy_metric(val_outputs, y_val).item() * y_val.size(0)
+        val_loss = total_val_loss / len(val_loader)
+        val_acc = accuracy_metric.compute().item()
+        scheduler.step(val_loss)
+        
+        # Save the best weights if validation loss improves
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_model_wts = copy.deepcopy(model.state_dict())
+            print(f"--> Best model updated at epoch {epoch} (Val Loss: {val_loss:.4f})")
 
-                val_total += y_val.size(0)
+        print(f"Epoch {epoch}: Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f}")
+        print(f"Epoch {epoch}: Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
+        logger.log_epoch(train_loss, val_loss, train_acc, val_acc)
 
-        val_avg_loss = val_loss / len(val_loader)
-        val_avg_acc = val_correct / val_total
-        val_acc_list.append(val_avg_acc)
-        val_lost_list.append(val_avg_loss)
-        print(f'This is validation loss: {val_avg_loss}, for epoch: {epoch}')
-        print(f'This is validation accuracy: {val_avg_acc}, for epoch: {epoch}')
-        # Log
-        logger.log_epoch(train_loss, val_avg_loss, train_acc, val_avg_acc)
-
-    # Save
+    model.load_state_dict(best_model_wts)
     logger.finalize(model)
-    
+    print("Training complete. Best weights restored.")
     
 def test_model(model, device, test_loader, idx_to_label):
     model.eval()
+    model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    accuracy_metric = torchmetrics.Accuracy(
-        task="multiclass",
-        num_classes=len(idx_to_label)
-    ).to(device)
+    accuracy_metric = torchmetrics.Accuracy(task="multiclass", num_classes=len(idx_to_label)).to(device)
 
     test_loss = 0
-    test_correct = 0
-    test_total = 0
+    accuracy_metric.reset()
 
     with torch.no_grad():
-        for X_test, y_test in test_loader:
+        for X_test, y_test in tqdm(test_loader, desc="Testing"):
             X_test, y_test = X_test.to(device), y_test.to(device)
 
             outputs = model(X_test)
             loss = criterion(outputs, y_test)
 
             test_loss += loss.item()
-            accuracy_metric.reset()
-            test_correct += accuracy_metric(outputs, y_test).item() * y_test.size(0)
-            test_total += y_test.size(0)
+            accuracy_metric.update(outputs, y_test)
 
     avg_loss = test_loss / len(test_loader)
-    avg_acc = test_correct / test_total
+    avg_acc = accuracy_metric.compute().item()
 
-    print("\n===== TEST RESULTS =====")
-    print(f"Test Loss: {avg_loss}")
-    print(f"Test Accuracy: {avg_acc}")
+    print("\n" + "="*25)
+    print(f"FINAL TEST RESULTS")
+    print(f"Test Loss: {avg_loss:.4f}")
+    print(f"Test Accuracy: {avg_acc:.4f}")
+    print("="*25 + "\n")
 
     return avg_loss, avg_acc
