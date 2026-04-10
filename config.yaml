@@ -1,0 +1,4 @@
+flags:
+  processing_files: True
+  generate_features: False
+  train_model: False
