@@ -2,3 +2,7 @@ flags:
   processing_files: False
   generate_features: True
   train_model: False
+  only_test_model: True
+
+  show_raw_data: False
+  show_training_data: True
