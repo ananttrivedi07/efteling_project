@@ -1,4 +1,5 @@
 from data_processing.functions import *
+from evaluation.evaluation import *
 from feature_processing.functions import *
 from models.training_testing import *
 import yaml
@@ -7,6 +8,7 @@ import torch
 from torchvision.models import resnet18, ResNet18_Weights
 
 CONFIG_file = "config.yaml"
+NUM_CLASSES = 2
 
 def load_config(config_file):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -44,9 +46,9 @@ def run_pipeline(config_file=None):
         # Device configuration
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Using device: {device}")
-        num_classes, num_epochs, batch_size = 6, 80, 32
+        num_classes, num_epochs, batch_size = NUM_CLASSES, 80, 32
         model = resnet18(weights=ResNet18_Weights.DEFAULT)
-        model.fc = nn.Linear(model.fc.in_features, 6) # Adjust the final layer for your 6 classesx
+        model.fc = nn.Linear(model.fc.in_features, num_classes) # Adjust the final layer for our classes
         model.to(device)
         train_model(model, device, logger, epochs=num_epochs, train_loader=train_loader, val_loader=val_loader, idx_to_label=idx_to_label)
         print("Model training completed!")
@@ -54,9 +56,13 @@ def run_pipeline(config_file=None):
     if config['flags']['only_test_model']:
         print("Testing the model...")
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        num_classes = 6
+        num_classes = NUM_CLASSES
         model = load_model("model_resnet18.pt", device, num_classes)
         test_model(model, device, test_loader, idx_to_label)
+        
+        # analyzing individal classes.
+        evaluate_binary_performance(model, device, test_loader)
+        plot_confusion_matrix(model, device, test_loader, idx_to_label)
     # 4. save results
     print("Data pipeline completed successfully!")
     

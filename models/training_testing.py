@@ -4,6 +4,7 @@ import torch.nn as nn
 import torchmetrics
 from tqdm import tqdm
 import copy
+from sklearn.metrics import classification_report, precision_score, recall_score, f1_score
 
 def train_model(model, device, logger, epochs=10, train_loader=None, val_loader=None, idx_to_label=None):
     model.to(device)
@@ -103,3 +104,30 @@ def test_model(model, device, test_loader, idx_to_label):
     print("="*25 + "\n")
 
     return avg_loss, avg_acc
+
+def evaluate_binary_performance(model, device, loader):
+    model.eval()
+    all_preds = []
+    all_labels = []
+    
+    with torch.no_grad():
+        for images, labels in loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            _, preds = torch.max(outputs, 1)
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+    # Generate the report
+    report = classification_report(all_labels, all_preds, target_names=['Other', 'Paper'])
+    
+    precision = precision_score(all_labels, all_preds)
+    recall = recall_score(all_labels, all_preds)
+    f1 = f1_score(all_labels, all_preds)
+
+    print("\nDetailed Binary Metrics for 'PAPER':")
+    print(f"Precision: {precision:.4f} (Purity of the paper bin)")
+    print(f"Recall:    {recall:.4f} (Percentage of paper collected)")
+    print(f"F1-Score:  {f1:.4f} (Overall balance)")
+    print("\nFull Classification Report:")
+    print(report)
