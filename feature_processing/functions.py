@@ -55,46 +55,34 @@ def visualize_random(dataset, idx_to_label):
 
 
 def run_feature_processing(root_folder="data", show_training_data=False, show_raw_data=False):
-    print("Running feature processing...")
+    print("Running Binary Feature Processing (Target: PAPER)...")
     base_path = os.path.join(root_folder, "dataset-resized")
     df = load_image_dataset(base_path)
 
-    # Equivalent to X_all and y_all
+    # --- BINARY MAPPING LOGIC ---
+    # Target 1 = Paper
+    # Target 0 = Everything Else (Cardboard, Glass, Metal, Plastic, Trash)
+    df['binary_target'] = df['label'].apply(lambda x: 1 if x == 'paper' else 0)
+
     X_all = df[["file_path"]]
-    y_all = df["label"]
+    y_all = df["binary_target"] 
 
-    # Map labels to integers
-    label_to_idx = {label: idx for idx, label in enumerate(sorted(y_all.unique()))}
-    idx_to_label = {idx: label for label, idx in label_to_idx.items()}
-    y_all = y_all.map(label_to_idx)
-    print("\nClass distribution (original labels):")
-    print(df["label"].value_counts())
-    # Train-test split and data loaders
-    X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.2, random_state=42, stratify=y_all)
-
-    # Train-validation split
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42, stratify=y_train)
-
-    # transform = transforms.Compose([
-    #     transforms.Resize((128, 128)),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize([0.5]*3, [0.5]*3)
-    # ])
+    # Simplify mappings for the 2-class setup
+    label_to_idx = {"Other": 0, "Paper": 1}
+    idx_to_label = {0: "Other", 1: "Paper"}
     
-    # transform = transforms.Compose([
-    #     transforms.RandomResizedCrop(224), # EXPERIMENT02
-    #     # transforms.Resize((224,224)),
-    #     # transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.BICUBIC, antialias=True),
-    #     # transforms.RandomApply(torch.nn.ModuleList([transforms.GaussianBlur(kernel_size=3,sigma=(0.2, 5))]),p=0.15),
-    #     transforms.RandomHorizontalFlip(),
-    #     transforms.RandomRotation(15),
-    #     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
-    #     #transforms.RandomCrop(128),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize(mean=[0.5]*3, std=[0.5]*3),
-    # ])
+    print("\nNew Binary Class Distribution:")
+    print(df["binary_target"].value_counts().rename(index=idx_to_label))
+    # ----------------------------
 
-    # FOR TRAINING ONLY
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_all, y_all, test_size=0.2, random_state=42, stratify=y_all
+    )
+
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train, y_train, test_size=0.2, random_state=42, stratify=y_train
+    )
+
     train_transform = transforms.Compose([
         transforms.RandomResizedCrop(224),
         transforms.RandomHorizontalFlip(),
@@ -104,25 +92,21 @@ def run_feature_processing(root_folder="data", show_training_data=False, show_ra
         transforms.Normalize(mean=[0.5]*3, std=[0.5]*3)
     ])
 
-    # FOR VALIDATION AND TESTING
     val_test_transform = transforms.Compose([
-        transforms.Resize((224, 224)), # Just resize it to the expected input size
+        transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5]*3, std=[0.5]*3)
     ])
     
     train_ds = ImageDataset(X_train, y_train, transform=train_transform)
     val_ds = ImageDataset(X_val, y_val, transform=val_test_transform)
+    test_ds = ImageDataset(X_test, y_test, transform=val_test_transform)
+
     train_loader = DataLoader(train_ds, batch_size=32, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=32, shuffle=False)
-
-    # Test data loader. Leave this unchanged.
-    test_ds = ImageDataset(X_test, y_test, transform=val_test_transform)
     test_loader = DataLoader(test_ds, batch_size=32, shuffle=False)
 
-    
     if show_training_data:
         visualize_random(train_ds, idx_to_label)
     
-    print("Classes:", label_to_idx)
     return train_loader, val_loader, test_loader, idx_to_label
