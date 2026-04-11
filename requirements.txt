@@ -1,0 +1,23 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+# Core AI (CUDA 12.1)
+torch==2.5.1
+torchvision==0.20.1
+torchaudio==2.5.1
+
+# Data & Visualization
+numpy<2.0.0
+matplotlib
+seaborn
+pandas
+scikit-learn
+pillow
+tqdm
+
+# Engineering & Training
+opencv-python
+pytorch-lightning
+kagglehub
+
+# Use --no-deps for this if it causes conflicts later
+openml-pytorch
