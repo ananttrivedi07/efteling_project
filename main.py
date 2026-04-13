@@ -38,7 +38,7 @@ def run_pipeline(config_file=None):
     
     # 2. feature extraction
     if config['flags']['generate_features']:
-        train_loader, val_loader, test_loader, idx_to_label = run_feature_processing(root_folder="data", show_training_data=config['flags']['show_training_data'], show_raw_data=config['flags']['show_raw_data'])
+        train_loader, val_loader, test_loader, idx_to_label = run_feature_processing(root_folder="data\\trashnet", show_training_data=config['flags']['show_training_data'], show_raw_data=config['flags']['show_raw_data'])
     
     # 3. run model
     if config['flags']['train_model']:

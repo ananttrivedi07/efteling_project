@@ -14,7 +14,10 @@ conda activate efteling_project
 pip install -r requirements.txt
 ````
 
-### 2. Run the pipeline
+### 2. Run notebook to load the data
+Run all cells of `notebooks\eda.ipynb` which loads the trashnet dataset and saves it to the data folder.
+
+### 3. Run the pipeline
 ```bash 
 python main.py
 ```
