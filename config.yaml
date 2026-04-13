@@ -1,5 +1,5 @@
 flags:
-  processing_files: False
+  processing_files: True
   generate_features: True
   train_model: False
   only_test_model: True

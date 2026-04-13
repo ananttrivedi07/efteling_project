@@ -15,6 +15,11 @@ pip install -r requirements.txt
 ````
 
 ### 2. Run the pipeline
+Before running the pipeline one need to set the flags in the ```config.yaml```.
+If running the pipeline for the first time, one needs to set the ```processing_files``` to ``True`` in order to extract the training data from KaggleHub. 
+
+Then you can get the other flags to generate features, training model or only testing the saved model.
+
 ```bash 
 python main.py
 ```
