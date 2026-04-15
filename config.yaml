@@ -1,7 +1,7 @@
 flags:
   processing_files: True
   generate_features: True
-  train_model: False
+  train_model: True
   only_test_model: True
 
   show_raw_data: False
