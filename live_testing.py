@@ -22,7 +22,7 @@ preprocess = transforms.Compose([
 
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
-print("Efteling Paper Detector Active... Press 'q' to quit.")
+print("Efteling PET Detector Active... Press 'q' to quit.")
 
 while True:
     ret, frame = cap.read()
@@ -39,8 +39,8 @@ while True:
         probabilities = F.softmax(outputs, dim=1)
         conf, pred = torch.max(probabilities, 1)
 
-    label = "PAPER" if pred.item() == 1 else "OTHER"
-    color = (0, 255, 0) if label == "PAPER" else (0, 0, 255) # Green for Paper, Red for Other
+    label = "PET" if pred.item() == 1 else "OTHER"
+    color = (0, 255, 0) if label == "PET" else (0, 0, 255) # Green for PET, Red for Other
     score = conf.item() * 100
 
     cv2.putText(frame, f"{label} ({score:.1f}%)", (20, 50), 

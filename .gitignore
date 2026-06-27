@@ -1,4 +1,16 @@
 *.jpg
 *.pyc
+*.xml
+*.pyi
+*.h
+*.bat
+*.psi
+*.exe
+*.mp4
+*.cfg
+*.ps1
+*.1
+*.pyc
 
+Lib/
 tensorboard_logs/ 

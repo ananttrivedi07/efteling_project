@@ -55,21 +55,20 @@ def visualize_random(dataset, idx_to_label):
 
 
 def run_feature_processing(root_folder="data", show_training_data=False, show_raw_data=False):
-    print("Running Binary Feature Processing (Target: PAPER)...")
+    print("Running Binary Feature Processing (Target: METAL/PLASTIC)...")
     base_path = os.path.join(root_folder, "dataset-resized")
     df = load_image_dataset(base_path)
 
     # --- BINARY MAPPING LOGIC ---
-    # Target 1 = Paper
-    # Target 0 = Everything Else (Cardboard, Glass, Metal, Plastic, Trash)
-    df['binary_target'] = df['label'].apply(lambda x: 1 if x == 'paper' else 0)
+    # Target 1 = Metal, Plastic
+    # Target 0 = Everything Else (Cardboard, Glass, Paper, Trash)
+    df['binary_target'] = df['label'].apply(lambda x: 1 if x in ['metal', 'plastic'] else 0)
 
     X_all = df[["file_path"]]
     y_all = df["binary_target"] 
 
     # Simplify mappings for the 2-class setup
-    label_to_idx = {"Other": 0, "Paper": 1}
-    idx_to_label = {0: "Other", 1: "Paper"}
+    idx_to_label = {0: "Other", 1: "Metal/Plastic"}
     
     print("\nNew Binary Class Distribution:")
     print(df["binary_target"].value_counts().rename(index=idx_to_label))

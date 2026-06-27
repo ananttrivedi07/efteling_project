@@ -46,7 +46,7 @@ def run_pipeline(config_file=None):
         # Device configuration
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Using device: {device}")
-        num_classes, num_epochs, batch_size = NUM_CLASSES, 80, 32
+        num_classes, num_epochs, batch_size = NUM_CLASSES, 30, 32
         model = resnet18(weights=ResNet18_Weights.DEFAULT)
         model.fc = nn.Linear(model.fc.in_features, num_classes) # Adjust the final layer for our classes
         model.to(device)
