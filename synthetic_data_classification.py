@@ -1,18 +1,19 @@
 import cv2
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from pathlib import Path
 from PIL import Image
 from torchvision import transforms
-from torchvision.models import resnet18
+from torchvision.models import mobilenet_v3_large
 
 
 class VideoTrashClassifier:
     """
-    Loads a fine-tuned ResNet18 checkpoint and classifies frames from
+    Loads a fine-tuned MobileNetV3-Large checkpoint and classifies frames from
     .mp4 videos in a given folder (default: data/synthetic_data).
 
-    NEW: instead of feeding the ResNet the full frame, we run background
+    NEW: instead of feeding the model the full frame, we run background
     subtraction (MOG2) to find moving blobs (the trash), crop around them
     with padding, and classify each crop. This matches how the model was
     trained (on cropped, mostly-single-object images) much better than
@@ -21,7 +22,7 @@ class VideoTrashClassifier:
 
     def __init__(
         self,
-        model_path="model_resnet18.pt",
+        model_path="model_mobilenetv3.pt",
         num_classes=2,
         video_dir="data/synthetic_data",
         frame_skip=1,          # 1 = process every frame. Raise if fast objects allow it.
@@ -49,7 +50,9 @@ class VideoTrashClassifier:
         self._bg_var_threshold = bg_var_threshold
         self._bg_detect_shadows = bg_detect_shadows
 
-        self.model = resnet18(num_classes=num_classes).to(self.device)
+        self.model = mobilenet_v3_large(weights=None, num_classes=1000).to(self.device)
+        self.model.classifier[-1] = nn.Linear(self.model.classifier[-1].in_features, num_classes)
+        self.model.to(self.device)
         self.model.load_state_dict(
             torch.load(model_path, map_location=self.device, weights_only=True)
         )
@@ -219,7 +222,7 @@ class VideoTrashClassifier:
 
 if __name__ == "__main__":
     classifier = VideoTrashClassifier(
-        model_path="model_resnet18.pt",
+        model_path="model_mobilenetv3.pt",
         video_dir="data/synthetic_data",
         frame_skip=1,            # every frame, since trash moves fast
         min_contour_area=800,    # TUNE: depends on your video resolution / object size
