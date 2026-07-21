@@ -125,9 +125,9 @@ def evaluate_binary_performance(model, device, loader):
     recall = recall_score(all_labels, all_preds)
     f1 = f1_score(all_labels, all_preds)
 
-    print("\nDetailed Binary Metrics for 'PAPER':")
-    print(f"Precision: {precision:.4f} (Purity of the paper bin)")
-    print(f"Recall:    {recall:.4f} (Percentage of paper collected)")
+    print("\nDetailed Binary Metrics for 'PET':")
+    print(f"Precision: {precision:.4f} (Percentage of correctly identified PET)")
+    print(f"Recall:    {recall:.4f} (Percentage of PET collected)")
     print(f"F1-Score:  {f1:.4f} (Overall balance)")
     print("\nFull Classification Report:")
     print(report)
