@@ -11,6 +11,13 @@ The pipeline follows four stages, mirrored in the repo structure below:
 3. **Training & evaluation** — train a classifier (ResNet-18 or MobileNetV3-Large), track metrics, save the best checkpoint, and report precision/recall/F1 plus a confusion matrix.
 4. **Fine-tuning & deployment** — fine-tune the MobileNetV3 model on crops extracted from real video footage, export it to ONNX/TFLite, and run it live from a webcam.
 
+
+
+## Demo
+ 
+[![Watch the demo](https://img.youtube.com/vi/-r0RdznWs1s/hqdefault.jpg)](https://www.youtube.com/shorts/-r0RdznWs1s)
+
+
 ## Repository Structure
 
 ```
@@ -74,8 +81,8 @@ flags:
 ### 3. Run the pipeline
 
 ```bash
-python main.py              # ResNet-18 backbone
-python main_mobilenet.py    # MobileNetV3-Large backbone
+python rest_net_main.py              # ResNet-18 backbone
+python mobile_net_main.py    # MobileNetV3-Large backbone
 ```
 
 Both scripts follow the same flow — download data → build features → train → evaluate (precision/recall/F1 + confusion matrix) — driven entirely by `config.yaml`.
