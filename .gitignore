@@ -11,6 +11,13 @@
 *.ps1
 *.1
 *.pyc
+*.png
+*.json
+*.onnx
+*.onnx.data
+*.pt
+.*h264
+.*pyc
 
 Lib/
 tensorboard_logs/ 
