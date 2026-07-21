@@ -22,8 +22,8 @@ The pipeline follows four stages, mirrored in the repo structure below:
 
 ```
 .
-├── main.py                     # Full pipeline entry point (ResNet-18 backbone)
-├── main_mobilenet.py           # Full pipeline entry point (MobileNetV3-Large backbone)
+├── rest_net_main.py                     # Full pipeline entry point (ResNet-18 backbone)
+├── mobile_net_main.py           # Full pipeline entry point (MobileNetV3-Large backbone)
 ├── config.yaml                 # Pipeline stage flags (see Configuration)
 ├── requirements.txt
 ├── finetune_on_video_crops.py  # Fine-tunes a trained MobileNetV3 checkpoint on real video crops
